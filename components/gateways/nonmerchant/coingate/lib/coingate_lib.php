@@ -77,12 +77,17 @@ class CoingateApi extends Coingate
 
     public function coingateCallback()
     {
-        return $this->apiRequest('https://api-sandbox.coingate.com/v1/orders/1');
+        $request = $this->apiRequest('https://api-sandbox.coingate.com/v1/orders/16988');
+
+        return json_decode($request['response_body'], true);
+
     }
 
     public function requestPayment($params)
     {
-        return $this->apiRequest('https://api-sandbox.coingate.com/v1/orders', 'POST', $params);
+        $request = $this->apiRequest('https://api-sandbox.coingate.com/v1/orders', 'POST', $params);
+
+        return json_decode($request['response_body']);
     }
 
 }

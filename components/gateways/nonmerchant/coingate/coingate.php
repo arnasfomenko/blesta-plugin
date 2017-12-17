@@ -242,7 +242,7 @@ class Coingate extends NonmerchantGateway
             'receive_currency' => $this->meta['receive_currency'],
             'callback_url'     => Configure::get('Blesta.gw_callback_url') . Configure::get('Blesta.company_id')
             . '/coingate/?token=' . $token,
-            'cancel_url'       => Configure::get('Blesta.gw_callback_url') . Configure::get('Blesta.company_id') . '/coingate/',
+            'cancel_url'       => '',
             'success_url'      => $this->ifSet($options['return_url']),
         );
 
@@ -250,9 +250,7 @@ class Coingate extends NonmerchantGateway
 
         $request = $api->requestPayment($post_params);
 
-        $json_decode = json_decode($request['response_body']);
-
-        header("Location: " . $json_decode->payment_url);
+        header("Location: " . $request->payment_url);
 
     }
 
@@ -277,103 +275,21 @@ class Coingate extends NonmerchantGateway
     {
 
         Loader::load(dirname(__FILE__) . DS . 'lib' . DS . 'coingate_lib.php');
+
         $api = new CoingateApi($this->meta['app_id'], $this->meta['api_key'], $this->meta['api_secret'], $this->meta['test_mode']);
 
-        $callback = $api->coingateCallback();
+        $response = $api->coingateCallback();
 
         $return_status = false;
         $invoices = [];
-        $status = 'declined';
+
+        $status = 'pending';
         if (is_string($response)) {
             $this->Input->setErrors(
                 ['transaction' => ['response' => Language::_('Coingate.!error.failed.response', true)]]
             );
         }
 
-        if (isset($response)) {
-            switch ($response) {
-                case 'pending':
-                    $return_status = true;
-                    $status = 'pending';
-                    break;
-                case 'confirming':
-                    $return_status = true;
-                    $status = 'pending';
-                    break;
-                case 'paid':
-                    $return_status = true;
-                    $status = 'approved';
-                    break;
-                case 'invalid':
-                    $this->Input->setErrors(
-                        ['invalid' => ['response' => Language::_('Coingate.!error.payment.invalid', true)]]
-                    );
-                    $status = 'declined';
-                    $return_status = false;
-                    break;
-                case 'canceled':
-                    $this->Input->setErrors(
-                        ['invalid' => ['response' => Language::_('Coingate.!error.payment.canceled', true)]]
-                    );
-                    $status = 'declined';
-                    $return_status = false;
-                    break;
-                case 'expired':
-                    $this->Input->setErrors(
-                        ['invalid' => ['response' => Language::_('Coingate.!error.payment.expired', true)]]
-                    );
-                    $status = 'declined';
-                    $return_status = false;
-                    break;
-                case 'refunded':
-                    $status = 'refunded';
-                    $return_status = true;
-                    break;
-            }
-        }
-
-        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), 'output', $return_status);
-
-        return [
-            'client_id'      => $client_id,
-            'amount'         => $this->ifSet($post['total_fee']),
-            'currency'       => $this->ifSet($post['currency']),
-            'status'         => $status,
-            'reference_id'   => null,
-            'transaction_id' => $this->ifSet($post['trade_no']),
-            'invoices'       => $this->unserializeInvoices($invoices),
-        ];
-    }
-
-    /**
-     * Returns data regarding a success transaction. This method is invoked when
-     * a client returns from the non-merchant gateway's web site back to Blesta.
-     *
-     * @param array $get The GET data for this request
-     * @param array $post The POST data for this request
-     * @return array An array of transaction data, may set errors using Input if the data appears invalid
-     *  - client_id The ID of the client that attempted the payment
-     *  - amount The amount of the payment
-     *  - currency The currency of the payment
-     *  - invoices An array of invoices and the amount the payment should be applied to (if any) including:
-     *      - id The ID of the invoice to apply to
-     *      - amount The amount to apply to the invoice
-     *     - status The status of the transaction (approved, declined, void, pending, reconciled, refunded, returned)
-     *     - transaction_id The ID returned by the gateway to identify this transaction
-     */
-    public function success(array $get, array $post)
-    {
-
-        $data_parts = explode('@', $get['out_trade_no'], 2);
-
-        $client_id = $data_parts[0];
-
-        $invoices = $this->ifSet($data_parts[1]);
-        if (is_numeric($invoices)) {
-            $invoices = null;
-        }
-        $status = 'error';
-        $return_status = false;
         if (isset($response['status'])) {
             switch ($response['status']) {
                 case 'pending':
@@ -414,15 +330,49 @@ class Coingate extends NonmerchantGateway
                     $return_status = true;
                     break;
             }
+            $invoices = $this->unserializeInvoices($this->ifSet($response));
         }
 
-        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($get), 'output', $return_status);
+        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), 'output', $return_status);
 
         return [
-            'client_id'      => $client_id,
+            'client_id'      => $this->ifSet($post['client_id']),
             'amount'         => $this->ifSet($post['total_fee']),
             'currency'       => $this->ifSet($post['currency']),
+            'invoices'       => $this->ifSet($invoices),
             'status'         => $status,
+            'transaction_id' => $this->ifSet($post['id']),
+        ];
+    }
+
+    /**
+     * Returns data regarding a success transaction. This method is invoked when
+     * a client returns from the non-merchant gateway's web site back to Blesta.
+     *
+     * @param array $get The GET data for this request
+     * @param array $post The POST data for this request
+     * @return array An array of transaction data, may set errors using Input if the data appears invalid
+     *  - client_id The ID of the client that attempted the payment
+     *  - amount The amount of the payment
+     *  - currency The currency of the payment
+     *  - invoices An array of invoices and the amount the payment should be applied to (if any) including:
+     *      - id The ID of the invoice to apply to
+     *      - amount The amount to apply to the invoice
+     *     - status The status of the transaction (approved, declined, void, pending, reconciled, refunded, returned)
+     *     - transaction_id The ID returned by the gateway to identify this transaction
+     */
+    public function success(array $get, array $post)
+    {
+
+        $invoices = [];
+        if (isset($get['response_body'])) {
+            $invoices = $this->unserializeInvoices($get['response_body']);
+        }
+        return [
+            'client_id'      => $this->ifSet($post['client_id']),
+            'amount'         => $this->ifSet($post['total_fee']),
+            'currency'       => $this->ifSet($post['currency']),
+            'status'         => 'approved',
             'transaction_id' => $this->ifSet($post['trade_no']),
             'invoices'       => $this->unserializeInvoices($invoices),
         ];
@@ -479,6 +429,14 @@ class Coingate extends NonmerchantGateway
         $this->Input->setErrors($this->getCommonError("unsupported"));
     }
 
+    /**
+     * Serializes an array of invoice info into a string.
+     *
+     * @param array A numerically indexed array invoices info including:
+     *  - id The ID of the invoice
+     *  - amount The amount relating to the invoice
+     * @return string A serialized string of invoice info in the format of key1=value1|key2=value2
+     */
     private function serializeInvoices(array $invoices)
     {
         $str = '';
@@ -489,6 +447,14 @@ class Coingate extends NonmerchantGateway
         return $str;
     }
 
+    /**
+     * Unserializes a string of invoice info into an array.
+     *
+     * @param string $str A serialized string of invoice info in the format of key1=value1|key2=value2
+     * @return array A numerically indexed array invoices info including:
+     *  - id The ID of the invoice
+     *  - amount The amount relating to the invoice
+     */
     private function unserializeInvoices($str)
     {
         $invoices = [];
@@ -503,5 +469,4 @@ class Coingate extends NonmerchantGateway
 
         return $invoices;
     }
-
 }
