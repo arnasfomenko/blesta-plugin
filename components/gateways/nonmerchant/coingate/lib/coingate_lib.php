@@ -15,6 +15,8 @@
  * @link https://coignate.com/ Nirays
  */
 
+require_once('coingate/init.php');
+
 class CoingateApi extends Coingate
 {
 
@@ -26,68 +28,5 @@ class CoingateApi extends Coingate
         $this->test_mode = $test_mode;
     }
 
-    public function getUrl()
-    {
-        if ($this->test_mode) {
-            $url = "https://api-sandbox.coingate.com/v1/orders/1";
-        } else {
-            $url = "https://api.coingate.com/v1/orders";
-        }
-
-        return $url;
-    }
-
-    public function apiRequest($url, $method = 'GET', $params = array())
-    {
-        $nonce = time();
-        $message = $nonce . $this->app_id . $this->api_key;
-        $signature = hash_hmac('sha256', $message, $this->api_secret);
-
-        $headers = array();
-        $headers[] = 'Access-Key: ' . $this->api_key;
-        $headers[] = 'Access-Nonce: ' . $nonce;
-        $headers[] = 'Access-Signature: ' . $signature;
-
-        $curl = curl_init();
-
-        $curl_options = array(
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL            => $url,
-        );
-
-        if ($method == 'POST') {
-            $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-
-            array_merge($curl_options, array(CURLOPT_POST => 1));
-            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
-        }
-
-        curl_setopt_array($curl, $curl_options);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($curl);
-        $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-        curl_close($curl);
-
-        return array('status_code' => $http_status, 'response_body' => $response);
-
-    }
-
-    public function coingateCallback()
-    {
-        $request = $this->apiRequest('https://api-sandbox.coingate.com/v1/orders/16988');
-
-        return json_decode($request['response_body'], true);
-
-    }
-
-    public function requestPayment($params)
-    {
-        $request = $this->apiRequest('https://api-sandbox.coingate.com/v1/orders', 'POST', $params);
-
-        return json_decode($request['response_body']);
-    }
-
+    
 }
