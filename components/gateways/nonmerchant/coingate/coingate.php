@@ -220,10 +220,10 @@ class Coingate extends NonmerchantGateway
      */
     public function buildProcess(array $contact_info, $amount, array $invoice_amounts = null, array $options = null)
     {
-        Loader::load(dirname(__FILE__) . DS . 'coingate-php' . DS . 'init.php');
+        Loader::load(dirname(__FILE__) . DS . 'coingate-php' . DS . 'init.php');   
 
-        $client = $this->Clients->get($contact_info['client_id']);
-        $orderId = $this->ifSet($contact_info['client_id']) . '-' . time();
+        $client_id = $this->ifSet($contact_info['client_id']);
+        $orderId = $client_id . '-' . time();
         $token = md5($orderId);
 
         if (isset($invoice_amounts) && is_array($invoice_amounts)) {
@@ -240,8 +240,8 @@ class Coingate extends NonmerchantGateway
         $post_params = array(
             'order_id'         => $orderId,
             'price'            => $this->ifSet($amount),
-            'description'      => $invoices,
-            'title'            => 'TODO',
+            'description'      => $this->ifSet($options['description']),
+            'title'            => 'CoinGate\'s Order',
             'token'            => $token,
             'currency'         => $this->ifSet($this->currency),
             'receive_currency' => $this->meta['receive_currency'],
@@ -257,12 +257,11 @@ class Coingate extends NonmerchantGateway
             'api_secret' => $this->meta['api_secret']
         ));
 
-        if ($order) {
+        if ($order && $order->payment_url) {
             header("Location: " . $order->payment_url);
         } else {
             print_r($order);
         }
-
     }
 
     /**
@@ -284,22 +283,12 @@ class Coingate extends NonmerchantGateway
      */
     public function validate(array $get, array $post)
     {
-        try {
-            $response = $this->coingateCallback($this->ifSet($post['id']));
-
-            if (!$response) {
-              echo 'Order not found';
-            }
-        } catch (Exception $e) {
-          echo $e->getMessage(); // BadCredentials Not found App by Access-Key
-        }
-
+        $cgOrder = $this->coingateCallback($this->ifSet($post['id']));
         $return_status = false;
-        $invoices = [];
         $status = null;
 
-        if (isset($response)) {
-            switch ($response->status) {
+        if (isset($cgOrder) && $cgOrder->token == $post['token']) {
+            switch ($cgOrder->status) {
                 case 'pending':
                     $return_status = true;
                     $status = 'pending';
@@ -309,8 +298,10 @@ class Coingate extends NonmerchantGateway
                     $status = 'pending';
                     break;
                 case 'paid':
-                    $return_status = true;
-                    $status = 'approved';
+                    if($cgOrder->price >= $amount) {
+                        $return_status = true;
+                        $status = 'approved';
+                    }
                     break;
                 case 'invalid':
                     $status = 'declined';
@@ -328,18 +319,21 @@ class Coingate extends NonmerchantGateway
                     $status = 'refunded';
                     $return_status = true;
                     break;
+                default:
+                    $status = 'pending';
+                    $return_status = true;
             }
         }
 
-        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($response), 'output', $return_status);
+        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), 'output', $return_status);
 
         return [
-            'client_id'             => $this->ifSet($get['client_id']),
-            'amount'                => $this->ifSet($response->price),
-            'currency'              => $this->ifSet($response->currency),
+            'client_id'             => $client_id,
+            'amount'                => $cgOrder->price,
+            'currency'              => $cgOrder->currency,
             'status'                => $status,
-            'transaction_id'        => $this->ifSet($response->payment_url),
-            'parent_transaction_id' => null,
+            'reference_id'          => null,
+            'transaction_id'        => $cgOrder->payment_url,
             'invoices'              => $this->ifSet($invoices),
         ];
     }
@@ -362,17 +356,18 @@ class Coingate extends NonmerchantGateway
      */
     public function success(array $get, array $post)
     {
-        $invoices = [];
+
+        $invoices = [];            
         if (isset($get['invoices'])) {
             $invoices = $this->unserializeInvoices($this->ifSet($get['invoices']));
         }
+
         return [
             'client_id'             => $this->ifSet($get['client_id']),
-            'amount'                => $this->ifSet($response->price),
-            'currency'              => $this->ifSet($response->currency),
+            'amount'                => $this->ifSet($post['price']),
+            'currency'              => $this->ifSet($post['currency']),
             'status'                => 'approved',
-            'transaction_id'        => $this->ifSet($response->payment_url),
-            'parent_transaction_id' => null,
+            'transaction_id'        => $this->ifSet($post['payment_url']),
             'invoices'              => $this->ifSet($invoices),
         ];
     }
