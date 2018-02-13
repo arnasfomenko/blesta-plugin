@@ -231,8 +231,7 @@ class Coingate extends NonmerchantGateway
         }
 
         $callbackURL = Configure::get('Blesta.gw_callback_url')
-            . Configure::get('Blesta.company_id') . '/coingate/?client_id='
-            . $this->ifSet($contact_info['client_id']) . '?token='
+            . Configure::get('Blesta.company_id') . '/coingate/' . '?token='
             . $token . '?invoices=' . $invoices;
 
         $test_mode = $this->coingateEnvironment();
@@ -246,7 +245,7 @@ class Coingate extends NonmerchantGateway
             'currency'         => $this->ifSet($this->currency),
             'receive_currency' => $this->meta['receive_currency'],
             'callback_url'     => $callbackURL,
-            'cancel_url'       => '',
+            'cancel_url'       => $this->ifSet($options['return_url']),
             'success_url'      => $this->ifSet($options['return_url']),
         );
 
@@ -287,7 +286,7 @@ class Coingate extends NonmerchantGateway
         $return_status = false;
         $status = null;
 
-        if (isset($cgOrder) && $cgOrder->token == $post['token']) {
+        if (isset($cgOrder)) {
             switch ($cgOrder->status) {
                 case 'pending':
                     $return_status = true;
@@ -325,16 +324,16 @@ class Coingate extends NonmerchantGateway
             }
         }
 
-        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), 'output', $return_status);
+        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($cgOrder), 'output', $return_status);
 
         return [
-            'client_id'             => $client_id,
+            'client_id'             => $this->ifSet($contact_info['client_id']),
             'amount'                => $cgOrder->price,
             'currency'              => $cgOrder->currency,
             'status'                => $status,
             'reference_id'          => null,
             'transaction_id'        => $cgOrder->payment_url,
-            'invoices'              => $this->ifSet($invoices),
+            'invoices'              => $this->ifSet($get['invoices']),
         ];
     }
 
@@ -363,7 +362,7 @@ class Coingate extends NonmerchantGateway
         }
 
         return [
-            'client_id'             => $this->ifSet($get['client_id']),
+            'client_id'             => $this->ifSet($contact_info['client_id']),
             'amount'                => $this->ifSet($post['price']),
             'currency'              => $this->ifSet($post['currency']),
             'status'                => 'approved',
