@@ -7,7 +7,7 @@ $lang['Coingate.api_secret'] = 'API Secret';
 $lang['Coingate.test_mode'] = 'Enable Sandbox Mode';
 $lang['Coingate.receive_currency'] = 'Receive Currency';
 $lang['Coingate.receive_currency_note'] = 'Currency you want to receive when making withdrawal at CoinGate.
-										   Please take a note what if you choose EUR or USD you will be asked to verify
+										   Please take a note that if you choose EUR or USD you will be asked to verify
 										   your business before making a withdrawal at CoinGate.';
 $lang['Coingate.buildprocess.submit'] = 'Bitcoin, Etherum, Litecoin or Other';
 $lang['Coingate.receive_currency.usd'] = 'US Dollars $';

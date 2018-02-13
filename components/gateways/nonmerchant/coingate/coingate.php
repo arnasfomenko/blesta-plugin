@@ -231,8 +231,8 @@ class Coingate extends NonmerchantGateway
         }
 
         $callbackURL = Configure::get('Blesta.gw_callback_url')
-            . Configure::get('Blesta.company_id') . '/coingate/' . '?token='
-            . $token . '?invoices=' . $invoices;
+            . Configure::get('Blesta.company_id') . '/coingate/?client_id='
+            . $this->ifSet($contact_info['client_id']) . '?invoices=' . $invoices;
 
         $test_mode = $this->coingateEnvironment();
 
@@ -285,6 +285,8 @@ class Coingate extends NonmerchantGateway
         $cgOrder = $this->coingateCallback($this->ifSet($post['id']));
         $return_status = false;
         $status = null;
+
+        dd($cgOrder);
 
         if (isset($cgOrder)) {
             switch ($cgOrder->status) {
@@ -360,6 +362,8 @@ class Coingate extends NonmerchantGateway
         if (isset($get['invoices'])) {
             $invoices = $this->unserializeInvoices($this->ifSet($get['invoices']));
         }
+
+        dd($post);
 
         return [
             'client_id'             => $this->ifSet($contact_info['client_id']),
