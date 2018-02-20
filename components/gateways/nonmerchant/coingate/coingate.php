@@ -366,7 +366,7 @@ class Coingate extends NonmerchantGateway
             $invoices = null;
         }
 
-        $status = 'approved';
+        $status = 'error';
 
         if (isset($post['status'])) {
             switch ($post['status']) {
