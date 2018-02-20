@@ -18,7 +18,6 @@ $lang['Coingate.receive_currency.eur'] = 'Euros €';
 $lang['Coingate.!error.app.id.valid'] = 'APP ID can not be empty.';
 $lang['Coingate.!error.api.key.valid'] = 'API Key can not be empty';
 $lang['Coingate.!error.api.secret.valid'] = 'API Secret can not be empty';
-$lang['Coingate.!error.failed.restore_include_path()onse'] = 'The transaction could not be processed.';
 $lang['Coingate.!error.payment.invalid'] = 'The transaction is invalid and could not be processed.';
 $lang['Coingate.!error.payment.canceled'] = 'The transaction is canceled and could not be processed.';
 $lang['Coingate.!error.payment.expired'] = 'The transaction has expired and could not be processed.';
