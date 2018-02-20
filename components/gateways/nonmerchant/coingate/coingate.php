@@ -220,19 +220,20 @@ class Coingate extends NonmerchantGateway
      */
     public function buildProcess(array $contact_info, $amount, array $invoice_amounts = null, array $options = null)
     {
-        Loader::load(dirname(__FILE__) . DS . 'coingate-php' . DS . 'init.php');   
+        Loader::load(dirname(__FILE__) . DS . 'coingate-php' . DS . 'init.php');
 
         $client_id = $this->ifSet($contact_info['client_id']);
-        $orderId = $client_id . '-' . time();
-        $token = md5($orderId);
 
         if (isset($invoice_amounts) && is_array($invoice_amounts)) {
             $invoices = $this->serializeInvoices($invoice_amounts);
         }
 
+        $orderId = $client_id . '@' . (!empty($invoices) ? $invoices : time());
+        $token = md5($orderId);
+
         $callbackURL = Configure::get('Blesta.gw_callback_url')
-            . Configure::get('Blesta.company_id') . '/coingate/?client_id='
-            . $this->ifSet($contact_info['client_id']) . '?invoices=' . $invoices;
+        . Configure::get('Blesta.company_id') . '/coingate/?client_id='
+        . $this->ifSet($contact_info['client_id']) . '/?invoices=' . $invoices;
 
         $test_mode = $this->coingateEnvironment();
 
@@ -249,11 +250,11 @@ class Coingate extends NonmerchantGateway
             'success_url'      => $this->ifSet($options['return_url']),
         );
 
-        $order = \CoinGate\Merchant\Order::create($post_params, array(),array(
+        $order = \CoinGate\Merchant\Order::create($post_params, array(), array(
             'environment' => $test_mode,
-            'app_id' => $this->meta['app_id'],
-            'api_key' => $this->meta['api_key'],
-            'api_secret' => $this->meta['api_secret']
+            'app_id'      => $this->meta['app_id'],
+            'api_key'     => $this->meta['api_key'],
+            'api_secret'  => $this->meta['api_secret'],
         ));
 
         if ($order && $order->payment_url) {
@@ -282,60 +283,57 @@ class Coingate extends NonmerchantGateway
      */
     public function validate(array $get, array $post)
     {
+
         $cgOrder = $this->coingateCallback($this->ifSet($post['id']));
-        $return_status = false;
-        $status = null;
 
-        dd($cgOrder);
+        $data_parts = explode('@', $this->ifSet($post['order_id']), 2);
 
-        if (isset($cgOrder)) {
-            switch ($cgOrder->status) {
+        $client_id = $data_parts[0];
+
+        $invoices = $this->ifSet($data_parts[1]);
+
+        if (is_numeric($invoices)) {
+            $invoices = null;
+        }
+
+        $status = 'error';
+
+        if (isset($post['status'])) {
+            switch ($post['status']) {
                 case 'pending':
-                    $return_status = true;
                     $status = 'pending';
                     break;
                 case 'confirming':
-                    $return_status = true;
                     $status = 'pending';
                     break;
                 case 'paid':
-                    if($cgOrder->price >= $amount) {
-                        $return_status = true;
-                        $status = 'approved';
-                    }
+                    $status = 'approved';
                     break;
                 case 'invalid':
                     $status = 'declined';
-                    $return_status = false;
                     break;
                 case 'canceled':
                     $status = 'declined';
-                    $return_status = false;
                     break;
                 case 'expired':
                     $status = 'declined';
-                    $return_status = false;
                     break;
                 case 'refunded':
                     $status = 'refunded';
-                    $return_status = true;
                     break;
                 default:
                     $status = 'pending';
-                    $return_status = true;
             }
         }
 
-        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($cgOrder), 'output', $return_status);
-
         return [
-            'client_id'             => $this->ifSet($contact_info['client_id']),
-            'amount'                => $cgOrder->price,
-            'currency'              => $cgOrder->currency,
-            'status'                => $status,
-            'reference_id'          => null,
-            'transaction_id'        => $cgOrder->payment_url,
-            'invoices'              => $this->ifSet($get['invoices']),
+            'client_id'      => $client_id,
+            'amount'         => $this->ifSet($post['price']),
+            'currency'       => $this->ifSet($post['currency']),
+            'status'         => $status,
+            'reference_id'   => null,
+            'transaction_id' => $this->ifSet($post['id']),
+            'invoices'       => $this->unserializeInvoices($invoices),
         ];
     }
 
@@ -358,20 +356,53 @@ class Coingate extends NonmerchantGateway
     public function success(array $get, array $post)
     {
 
-        $invoices = [];            
-        if (isset($get['invoices'])) {
-            $invoices = $this->unserializeInvoices($this->ifSet($get['invoices']));
+        $data_parts = explode('@', $this->ifSet($post['order_id']), 2);
+
+        $client_id = $data_parts[0];
+
+        $invoices = $this->ifSet($data_parts[1]);
+
+        if (is_numeric($invoices)) {
+            $invoices = null;
         }
 
-        dd($post);
+        $status = 'approved';
+
+        if (isset($post['status'])) {
+            switch ($post['status']) {
+                case 'pending':
+                    $status = 'pending';
+                    break;
+                case 'confirming':
+                    $status = 'pending';
+                    break;
+                case 'paid':
+                    $status = 'approved';
+                    break;
+                case 'invalid':
+                    $status = 'declined';
+                    break;
+                case 'canceled':
+                    $status = 'declined';
+                    break;
+                case 'expired':
+                    $status = 'declined';
+                    break;
+                case 'refunded':
+                    $status = 'refunded';
+                    break;
+                default:
+                    $status = 'pending';
+            }
+        }
 
         return [
-            'client_id'             => $this->ifSet($contact_info['client_id']),
-            'amount'                => $this->ifSet($post['price']),
-            'currency'              => $this->ifSet($post['currency']),
-            'status'                => 'approved',
-            'transaction_id'        => $this->ifSet($post['payment_url']),
-            'invoices'              => $this->ifSet($invoices),
+            'client_id'      => $client_id,
+            'amount'         => $this->ifSet($post['price']),
+            'currency'       => $this->ifSet($post['currency']),
+            'status'         => $status,
+            'transaction_id' => $this->ifSet($post['id']),
+            'invoices'       => $this->unserializeInvoices($invoices),
         ];
     }
 
@@ -467,9 +498,10 @@ class Coingate extends NonmerchantGateway
         return $invoices;
     }
 
-    private function coingateEnvironment() {
+    private function coingateEnvironment()
+    {
 
-        if($this->meta['test_mode'] == true) {
+        if ($this->meta['test_mode'] == true) {
             $test_mode = 'sandbox';
         } else {
             $test_mode = 'live';
@@ -478,7 +510,8 @@ class Coingate extends NonmerchantGateway
         return $test_mode;
     }
 
-    private function coingateCallback($id) {
+    private function coingateCallback($id)
+    {
 
         Loader::load(dirname(__FILE__) . DS . 'coingate-php' . DS . 'init.php');
 
@@ -486,9 +519,9 @@ class Coingate extends NonmerchantGateway
 
         $order = \CoinGate\Merchant\Order::find($id, array(), array(
             'environment' => $test_mode,
-            'app_id' => $this->meta['app_id'],
-            'api_key' => $this->meta['api_key'],
-            'api_secret' => $this->meta['api_secret']
+            'app_id'      => $this->meta['app_id'],
+            'api_key'     => $this->meta['api_key'],
+            'api_secret'  => $this->meta['api_secret'],
         ));
 
         return $order;
