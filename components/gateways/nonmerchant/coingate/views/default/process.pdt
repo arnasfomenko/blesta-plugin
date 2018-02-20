@@ -1,3 +1,0 @@
-<?php
-    echo $response['status_code'];
-    echo $response['response_body'];
