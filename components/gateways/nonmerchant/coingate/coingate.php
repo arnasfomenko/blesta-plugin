@@ -326,6 +326,8 @@ class Coingate extends NonmerchantGateway
             }
         }
 
+        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), "output", true);
+
         return [
             'client_id'      => $client_id,
             'amount'         => $this->ifSet($post['price']),
