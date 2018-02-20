@@ -113,8 +113,13 @@ class Coingate extends NonmerchantGateway
             'EUR' => Language::_('Coingate.receive_currency.eur', true),
             'USD' => Language::_('Coingate.receive_currency.usd', true),
         ];
+        $coingate_environment = [
+            'sandbox' => Language::_('Coingate.environment.sandbox', true),
+            'live' => Language::_('Coingate.environment.live', true),
+        ];
         $this->view->set('meta', $meta);
         $this->view->set('receive_currency', $receive_currency);
+        $this->view->set('coingate_environment', $coingate_environment);
 
         return $this->view->fetch();
     }
@@ -503,7 +508,7 @@ class Coingate extends NonmerchantGateway
     private function coingateEnvironment()
     {
 
-        if ($this->meta['test_mode'] == true) {
+        if ($this->meta['coingate_environment'] == 'sandbox') {
             $test_mode = 'sandbox';
         } else {
             $test_mode = 'live';

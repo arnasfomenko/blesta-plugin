@@ -4,7 +4,9 @@ $lang['Coingate.name'] = 'Bitcoin, Etherum, Litecoin and Other via CoinGate';
 $lang['Coingate.app_id'] = 'APP ID';
 $lang['Coingate.api_key'] = 'API Key';
 $lang['Coingate.api_secret'] = 'API Secret';
-$lang['Coingate.test_mode'] = 'Enable Sandbox Mode';
+$lang['Coingate.coingate_environment'] = 'CoinGate Environment';
+$lang['Coingate.environment.sandbox'] = 'sandbox';
+$lang['Coingate.environment.live'] = 'live';
 $lang['Coingate.receive_currency'] = 'Receive Currency';
 $lang['Coingate.receive_currency_note'] = 'Currency you want to receive when making withdrawal at CoinGate.
 										   Please take a note that if you choose EUR or USD you will be asked to verify
