@@ -15,7 +15,6 @@ $lang['Coingate.buildprocess.submit'] = 'Bitcoin, Etherum, Litecoin or Other';
 $lang['Coingate.receive_currency.usd'] = 'US Dollars $';
 $lang['Coingate.receive_currency.btc'] = 'Bitcoin ฿';
 $lang['Coingate.receive_currency.eur'] = 'Euros €';
-
 // Error
 $lang['Coingate.!error.app.id.valid'] = 'APP ID can not be empty.';
 $lang['Coingate.!error.api.key.valid'] = 'API Key can not be empty';
