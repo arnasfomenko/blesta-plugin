@@ -233,7 +233,7 @@ class Coingate extends NonmerchantGateway
 
         $callbackURL = Configure::get('Blesta.gw_callback_url')
         . Configure::get('Blesta.company_id') . '/coingate/?client_id='
-        . $this->ifSet($contact_info['client_id']) . '/?invoices=' . $invoices;
+        . $this->ifSet($contact_info['client_id']);
 
         $test_mode = $this->coingateEnvironment();
 
