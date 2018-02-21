@@ -9,6 +9,7 @@
  * @author CoinGate
  * @copyright Copyright (c) 2018, CoinGate
  * @license http://www.blesta.com/license/ The Blesta License Agreement
+ * @license http://github.com/coingate/blesta-plugin/blob/master/LICENSE
  * @link http://www.blesta.com/ Blesta
  * @link https://coingate.com Coingate
  */
