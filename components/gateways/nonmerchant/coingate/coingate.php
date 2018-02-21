@@ -6,9 +6,8 @@
  *
  * @package blesta
  * @subpackage blesta.components.gateways.nonmerchant.coingate
- * @author Phillips Data, Inc.
- * @author Coingate
- * @copyright Copyright (c) 2010, Phillips Data, Inc.
+ * @author CoinGate
+ * @copyright Copyright (c) 2018, CoinGate
  * @license http://www.blesta.com/license/ The Blesta License Agreement
  * @link http://www.blesta.com/ Blesta
  * @link https://coingate.com Coingate
