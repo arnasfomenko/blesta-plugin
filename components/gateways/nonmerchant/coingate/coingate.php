@@ -132,14 +132,12 @@ class Coingate extends NonmerchantGateway
         $record = new Record();
         $company_name = $record->select("name")->from("companies")->where("id", "=", 1)->fetch();
 
-        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($contact_info), "output", true);
-
         $orderId = $client_id . '@' . (!empty($invoices) ? $invoices : time());
         $token = md5($orderId);
 
         $callbackURL = Configure::get('Blesta.gw_callback_url')
         . Configure::get('Blesta.company_id') . '/coingate/?client_id='
-        . $this->ifSet($contact_info['client_id']) . '/?token=' . $token;
+        . $this->ifSet($contact_info['client_id']) . '&token=' . $token;
 
         $test_mode = $this->coingateEnvironment();
 
@@ -152,6 +150,7 @@ class Coingate extends NonmerchantGateway
             'currency'         => $this->ifSet($this->currency),
             'receive_currency' => $this->meta['receive_currency'],
             'callback_url'     => $callbackURL,
+            //TODO
             'cancel_url'       => $this->ifSet($options['return_url']),
             'success_url'      => $this->ifSet($options['return_url']),
         );
@@ -185,6 +184,16 @@ class Coingate extends NonmerchantGateway
             $invoices = null;
         }
 
+        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), "output", true);
+
+        $orderId = $post['order_id'];
+        $token = md5($orderId);
+
+        if (empty($get['token']) || strcmp($get['token'], $token) !== 0) {
+                $error_message = 'CoinGate Token: ' . $get['token'] . ' is not valid';
+                throw new Exception($error_message);
+        }
+
         $status = 'error';
 
         if (isset($post['status'])) {
@@ -215,8 +224,6 @@ class Coingate extends NonmerchantGateway
             }
         }
 
-        //$this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), "output", true);
-
         return [
             'client_id'      => $client_id,
             'amount'         => $this->ifSet($post['price']),
@@ -242,6 +249,15 @@ class Coingate extends NonmerchantGateway
         }
 
         $status = 'error';
+
+        $orderId = $post['order_id'];
+        $token = md5($orderId);
+
+        if (empty($get['token']) || strcmp($get['token'], $token) !== 0) {
+                $error_message = 'CoinGate Token: ' . $get['token'] . ' is not valid';
+                throw new Exception($error_message);
+        }
+
 
         if (isset($post['status'])) {
             switch ($post['status']) {
