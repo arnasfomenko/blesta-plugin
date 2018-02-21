@@ -11,7 +11,7 @@ $lang['Coingate.receive_currency'] = 'Receive Currency';
 $lang['Coingate.receive_currency_note'] = 'Currency you want to receive when making withdrawal at CoinGate.
 										   Please take a note that if you choose EUR or USD you will be asked to verify
 										   your business before making a withdrawal at CoinGate.';
-$lang['Coingate.buildprocess.submit'] = 'Bitcoin, Etherum, Litecoin or Other';
+$lang['Coingate.buildprocess.submit'] = 'Pay with Bitcoin or Altcoins via CoinGate.com';
 $lang['Coingate.receive_currency.usd'] = 'US Dollars $';
 $lang['Coingate.receive_currency.btc'] = 'Bitcoin ฿';
 $lang['Coingate.receive_currency.eur'] = 'Euros €';

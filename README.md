@@ -21,3 +21,6 @@ Please note, that for "Test" mode you **must** generate separate API credentials
 5. Go to **Available** Tab and press **Install** next to **CoinGate** Plugin
 
 6. Enter [API Credentials](http://support.coingate.com/knowledge_base/topics/how-can-i-create-coingate-api-credentials) (*App ID*, *Api Key*, *Api Secret*) data to Blesta-CoinGate Plugin Settings: *Staff Portal » Settings » Payment Gateways » Installed* click on **Manage**.
+
+7. Don't forget to add **CoinGate** as a payment method in your **Order Forms** in *Staff Portal » Packages » Order Forms*.
+

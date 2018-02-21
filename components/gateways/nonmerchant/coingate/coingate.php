@@ -129,12 +129,17 @@ class Coingate extends NonmerchantGateway
             $invoices = $this->serializeInvoices($invoice_amounts);
         }
 
+        $record = new Record();
+        $company_name = $record->select("name")->from("companies")->where("id", "=", 1)->fetch();
+
+        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($contact_info), "output", true);
+
         $orderId = $client_id . '@' . (!empty($invoices) ? $invoices : time());
         $token = md5($orderId);
 
         $callbackURL = Configure::get('Blesta.gw_callback_url')
         . Configure::get('Blesta.company_id') . '/coingate/?client_id='
-        . $this->ifSet($contact_info['client_id']);
+        . $this->ifSet($contact_info['client_id']) . '/?token=' . $token;
 
         $test_mode = $this->coingateEnvironment();
 
@@ -142,7 +147,7 @@ class Coingate extends NonmerchantGateway
             'order_id'         => $orderId,
             'price'            => $this->ifSet($amount),
             'description'      => $this->ifSet($options['description']),
-            'title'            => 'CoinGate\'s Order',
+            'title'            => $company_name->name . " " .$this->ifSet($options['description']),
             'token'            => $token,
             'currency'         => $this->ifSet($this->currency),
             'receive_currency' => $this->meta['receive_currency'],
@@ -210,7 +215,7 @@ class Coingate extends NonmerchantGateway
             }
         }
 
-        $this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), "output", true);
+        //$this->log($this->ifSet($_SERVER['REQUEST_URI']), serialize($post), "output", true);
 
         return [
             'client_id'      => $client_id,
