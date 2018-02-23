@@ -11,6 +11,7 @@ $lang['Coingate.receive_currency'] = 'Payout Currency';
 $lang['Coingate.receive_currency_note'] = 'Currency you want to receive when making withdrawal at CoinGate.
 										   Please take a note that if you choose EUR or USD you will be asked to verify
 										   your business before making a withdrawal at CoinGate.';
+$lang['Coingate.environment_note'] = 'Enable "sandbox" to test on sandbox.coingate.com. Please note, that for sandbox mode you must generate separate API credentials on sandbox.coingate.com. API credentials generated on coingate.com will not work for sandbox mode';
 $lang['Coingate.buildprocess.submit'] = 'Pay with Bitcoin or Altcoins via CoinGate.com';
 $lang['Coingate.receive_currency.usd'] = 'US Dollars $';
 $lang['Coingate.receive_currency.btc'] = 'Bitcoin ฿';

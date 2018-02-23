@@ -29,5 +29,6 @@
         $this->Form->label($this->_('Coingate.coingate_environment', true), 'coingate_environment');
         $this->Form->fieldSelect('coingate_environment', $this->Html->ifSet($coingate_environment, []), $this->Html->ifSet($meta['coingate_environment']), ['id'=>'coingate_environment']);
         ?>
+        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('Coingate.environment_note');?></div></span>
 	</li>
 </ul>
