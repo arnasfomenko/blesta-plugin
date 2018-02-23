@@ -7,7 +7,7 @@ $lang['Coingate.api_secret'] = 'API Secret';
 $lang['Coingate.coingate_environment'] = 'CoinGate Environment';
 $lang['Coingate.environment.sandbox'] = 'sandbox';
 $lang['Coingate.environment.live'] = 'live';
-$lang['Coingate.receive_currency'] = 'Receive Currency';
+$lang['Coingate.receive_currency'] = 'Payout Currency';
 $lang['Coingate.receive_currency_note'] = 'Currency you want to receive when making withdrawal at CoinGate.
 										   Please take a note that if you choose EUR or USD you will be asked to verify
 										   your business before making a withdrawal at CoinGate.';
