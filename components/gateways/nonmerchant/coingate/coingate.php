@@ -159,6 +159,8 @@ class Coingate extends NonmerchantGateway
             'app_id'      => $this->meta['app_id'],
             'api_key'     => $this->meta['api_key'],
             'api_secret'  => $this->meta['api_secret'],
+            'user_agent'  => 'CoinGate - Blesta v' .BLESTA_VERSION . ' Extension v' . $this->getVersion(),
+
         ));
 
         if ($order && $order->payment_url) {
@@ -361,6 +363,7 @@ class Coingate extends NonmerchantGateway
             'app_id'      => $this->meta['app_id'],
             'api_key'     => $this->meta['api_key'],
             'api_secret'  => $this->meta['api_secret'],
+            'user_agent'  => 'CoinGate - Blesta v' .BLESTA_VERSION . ' Extension v' . $this->getVersion(),
         ));
 
         return $order;
