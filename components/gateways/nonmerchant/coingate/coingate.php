@@ -195,35 +195,7 @@ class Coingate extends NonmerchantGateway
                 throw new Exception($error_message);
         }
 
-        $status = 'error';
-
-        if (isset($post['status'])) {
-            switch ($post['status']) {
-                case 'pending':
-                    $status = 'pending';
-                    break;
-                case 'confirming':
-                    $status = 'pending';
-                    break;
-                case 'paid':
-                    $status = 'approved';
-                    break;
-                case 'invalid':
-                    $status = 'declined';
-                    break;
-                case 'canceled':
-                    $status = 'declined';
-                    break;
-                case 'expired':
-                    $status = 'declined';
-                    break;
-                case 'refunded':
-                    $status = 'refunded';
-                    break;
-                default:
-                    $status = 'pending';
-            }
-        }
+        $status = $this->statusChecking($post['id']);
 
         return [
             'client_id'      => $client_id,
@@ -260,34 +232,7 @@ class Coingate extends NonmerchantGateway
                 throw new Exception($error_message);
         }
 
-
-        if (isset($post['status'])) {
-            switch ($post['status']) {
-                case 'pending':
-                    $status = 'pending';
-                    break;
-                case 'confirming':
-                    $status = 'pending';
-                    break;
-                case 'paid':
-                    $status = 'approved';
-                    break;
-                case 'invalid':
-                    $status = 'declined';
-                    break;
-                case 'canceled':
-                    $status = 'declined';
-                    break;
-                case 'expired':
-                    $status = 'declined';
-                    break;
-                case 'refunded':
-                    $status = 'refunded';
-                    break;
-                default:
-                    $status = 'pending';
-            }
-        }
+        $status = $this->statusChecking($post['id']);
 
         return [
             'client_id'      => $client_id,
@@ -368,4 +313,43 @@ class Coingate extends NonmerchantGateway
 
         return $order;
     }
+
+    public function statusChecking($id) {
+
+        $status = 'error';
+
+        $cgOrder = $this->coingateCallback($id);
+
+        if (isset($cgOrder)) {
+            switch ($cgOrder->status) {
+                case 'pending':
+                    $status = 'pending';
+                    break;
+                case 'confirming':
+                    $status = 'pending';
+                    break;
+                case 'paid':
+                    $status = 'approved';
+                    break;
+                case 'invalid':
+                    $status = 'declined';
+                    break;
+                case 'canceled':
+                    $status = 'declined';
+                    break;
+                case 'expired':
+                    $status = 'declined';
+                    break;
+                case 'refunded':
+                    $status = 'refunded';
+                    break;
+                default:
+                    $status = 'pending';
+            }
+        }
+
+        return $status;
+
+    }
+
 }
